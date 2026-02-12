@@ -1,5 +1,5 @@
 const { API_BASE_URL } = require("./services");
-const Gpio = require('onoff').Gpio
+const Gpio = require("onoff").Gpio
 const states = {
     idle:"IDLE",
     payment:"PAY",
@@ -45,6 +45,9 @@ class LED {
         this.state = states.idle;
         this.hasWiFi = false;
         this._setLED(0,0,0);
+        this.pins.red.unexport()
+        this.pins.green.unexport()
+        this.pins.blue.unexport()
     }
     _setLED(red, green, blue) {
         this.pins.red.writeSync(+!red);
@@ -53,7 +56,6 @@ class LED {
     }
 
     _startLEDLoop() {
-        console.log(this.state, this.flashCounter > (4/2)-1)
         switch (this.state) {
             case states.idle:
                 if (this.hasWiFi) {
@@ -85,7 +87,7 @@ const ledSingleton = new LED(526,527,530);
 
 async function checkWiFi() {
     try {
-        await fetch(API_BASE_URL)
+        await fetch(API_BASE_URL, { signal: AbortSignal.timeout(1000) })
         ledSingleton.setWiFi(true);
     } catch {
         ledSingleton.setWiFi(false);
